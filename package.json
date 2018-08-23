@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 5000",
+    "test:debug": "ng test --sourcemaps=false",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",

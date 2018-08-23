@@ -11,6 +11,7 @@ export class CurrentWeatherComponent implements OnInit {
   current: ICurrentWeather;
 
   constructor(private  weatherService: WeatherService) {
+
   }
 
   ngOnInit() {
