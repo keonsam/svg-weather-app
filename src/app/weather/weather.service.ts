@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http'
 import { environment } from "../../environments/environment";
-import { Observable } from 'rxjs'
+import {BehaviorSubject, Observable} from 'rxjs'
 import {ICurrentWeather} from "../interfaces";
 import { map } from "rxjs/operators";
 
@@ -28,6 +28,14 @@ export interface IWeatherService {
   providedIn: 'root'
 })
 export class WeatherService implements IWeatherService {
+  currentWeather = new BehaviorSubject<ICurrentWeather>({
+    city: '--',
+    country: '--',
+    date: Date.now(),
+    image: '',
+    temperature: 0,
+    description: '',
+  });
 
   constructor(private httpClient : HttpClient) { }
 
@@ -46,14 +54,34 @@ export class WeatherService implements IWeatherService {
     return kelvin - 273.15;
   }
 
-  getCurrentWeather(city: string, country: string): Observable<ICurrentWeather> {
-    return this.httpClient.get<ICurrentWeatherData>(
-      `${environment.baseUrl}api.openweathermap.org/data/2.5/weather?` +
-      `q=${city},${country}&appid=${environment.appId}`
-    ).pipe(
-      map(data =>
-        this.transformToICurrentWeather(data)
+  private getCurrentWeatherHelper(uriParams: string): Observable<ICurrentWeather> {
+    return this.httpClient
+      .get<ICurrentWeatherData>(
+        `${environment.baseUrl}api.openweathermap.org/data/2.5/weather?` +
+        `${uriParams}&appid=${environment.appId}`
       )
-    );
+      .pipe(map(data => this.transformToICurrentWeather(data)));
+  }
+
+  getCurrentWeatherByCoords(coords: Coordinates): Observable<ICurrentWeather> {
+    const uriParams = `lat=${coords.latitude}&lon=${coords.longitude}`
+    return this.getCurrentWeatherHelper(uriParams)
+  }
+
+  getCurrentWeather(search: string | number,
+                    country?: string
+  ): Observable<ICurrentWeather> {
+    let uriParams = ''
+    if (typeof search === 'string') {
+      uriParams = `q=${search}`
+    } else {
+      uriParams = `zip=${search}`
+    }
+
+    if (country) {
+      uriParams = `${uriParams},${country}`
+    }
+
+    return this.getCurrentWeatherHelper(uriParams);
   }
 }
